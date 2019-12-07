@@ -1,28 +1,24 @@
-package presenter
+package gateway
 
 import (
 	"fmt"
 	"os"
 	"strings"
 
-	"github.com/nrnrk/psql-splitter/domain/splitter/order"
+	"github.com/nrnrk/psql-splitter/domain/split"
+	"github.com/nrnrk/psql-splitter/domain/split/order"
 )
 
-type writeContent struct {
-	statements string
-	order      int
-}
-
-func writer(
+func Write(
 	prefix string,
-	contC <-chan writeContent,
+	contC <-chan split.SplittedStatements,
 	terminateC <-chan bool,
 	errC <-chan error,
 ) {
 	for {
 		select {
 		case c := <-contC:
-			write(prefix, c.statements, c.order)
+			write(prefix, c.Statements, c.Order)
 		case t := <-terminateC:
 			if t {
 				return
