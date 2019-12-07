@@ -3,7 +3,10 @@ package gateway
 import (
 	"fmt"
 	"os"
+	"path"
 	"strings"
+
+	"github.com/nrnrk/psql-splitter/config"
 
 	"github.com/nrnrk/psql-splitter/domain/split"
 	"github.com/nrnrk/psql-splitter/domain/split/order"
@@ -33,8 +36,9 @@ func Write(
 func write(prefix string, statements string, index int) {
 	// TODO: should be set by option
 	output := fmt.Sprintf("%s-%s.sql", prefix, order.ByAlphabet(index))
-	fmt.Printf("Writing %s\n", output)
-	f, err := os.Create(output)
+	file := path.Join(config.OutputDir, output)
+	fmt.Printf("Writing %s\n", file)
+	f, err := os.Create(file)
 	if err != nil {
 		panic(err)
 	}

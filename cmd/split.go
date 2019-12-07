@@ -7,9 +7,11 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/nrnrk/psql-splitter/adapter/gateway"
+	"github.com/nrnrk/psql-splitter/config"
 )
 
 var splitBy int
+var outputDir string
 
 // splitCmd represents the split command
 var splitCmd = &cobra.Command{
@@ -33,6 +35,7 @@ and then you can get broken down files which include 1000 statements.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		for _, arg := range args {
 			fmt.Printf("Splitting %s\n", arg)
+			config.OutputDir = outputDir
 			if err := gateway.Split(arg, splitBy); err != nil {
 				panic(err)
 			}
@@ -52,5 +55,6 @@ func init() {
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	// splitCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-	rootCmd.Flags().IntVarP(&splitBy, "split by", "n", 200, "the number of statements in each file")
+	splitCmd.Flags().IntVarP(&splitBy, "split by", "n", 200, "the number of statements in each file")
+	splitCmd.Flags().StringVarP(&outputDir, "output directory", "o", ".", "the directory to output")
 }
