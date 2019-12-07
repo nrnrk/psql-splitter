@@ -1,37 +1,48 @@
-package usecase
+package split
 
 import (
 	"fmt"
 	"io"
 
 	pg_query "github.com/lfittl/pg_query_go"
-	"github.com/nrnrk/psql-splitter/usecase/state"
+
+	"github.com/nrnrk/psql-splitter/domain/split/head"
 )
+
+type Splitter interface {
+	ReadFrom(r io.Reader) error
+	AppendSql()
+	CanSplit() bool
+	FlushSql()
+	FlushStmts()
+	IsEndStmt() bool
+	IsContentEmpty() bool
+}
 
 type splitter struct {
 	splitNum int
 	splitCnt int
-	cont     *writeContent
+	Cont     *SplittedStatements
 	sql      []byte
 	buf      []byte
-	head     state.Head
+	head     head.Head
 }
 
-func newSplitter(splitNum int) *splitter {
+func NewSplitter(splitNum int) *splitter {
 	return &splitter{
 		splitNum: splitNum,
 		splitCnt: 0,
-		cont: &writeContent{
-			statements: ``,
-			order:      0,
+		Cont: &SplittedStatements{
+			Statements: ``,
+			Order:      0,
 		},
 		sql:  make([]byte, 0, 50),
 		buf:  make([]byte, 1),
-		head: state.NewHead(),
+		head: head.NewHead(),
 	}
 }
 
-func (s *splitter) readFrom(r io.Reader) error {
+func (s *splitter) ReadFrom(r io.Reader) error {
 	_, err := r.Read(s.buf)
 	if err != nil {
 		return err
@@ -43,12 +54,12 @@ func (s *splitter) readFrom(r io.Reader) error {
 	return nil
 }
 
-func (s *splitter) appendSql() {
+func (s *splitter) AppendSql() {
 	s.splitCnt++
-	s.cont.statements += string(s.sql)
+	s.Cont.Statements += string(s.sql)
 }
 
-func (s *splitter) canSplit() bool {
+func (s *splitter) CanSplit() bool {
 	if s.splitCnt < s.splitNum {
 		return false
 	}
@@ -61,24 +72,24 @@ func (s *splitter) canSplit() bool {
 	return true
 }
 
-func (s *splitter) isEndStmt() bool {
+func (s *splitter) IsEndStmt() bool {
 	return s.head.IsEndStmt()
 }
 
-func (s *splitter) flushSql() {
+func (s *splitter) FlushSql() {
 	s.head.Restart()
 	// keep capacity
 	s.sql = s.sql[:0]
 }
 
-func (s *splitter) flushStmts() {
+func (s *splitter) FlushStmts() {
 	s.splitCnt = 0
-	s.cont.order++
-	s.cont.statements = ``
+	s.Cont.Order++
+	s.Cont.Statements = ``
 }
 
-func (s *splitter) isContentEmpty() bool {
-	return s.cont.statements == ``
+func (s *splitter) IsContentEmpty() bool {
+	return s.Cont.Statements == ``
 }
 
 func (s *splitter) parseCheck() error {

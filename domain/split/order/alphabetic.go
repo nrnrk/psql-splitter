@@ -1,4 +1,4 @@
-package ordering
+package order
 
 const alphabetNum = 26
 const doubleAlphabetNum = alphabetNum * alphabetNum

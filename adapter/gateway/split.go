@@ -1,4 +1,4 @@
-package usecase
+package gateway
 
 import (
 	"fmt"
@@ -7,7 +7,8 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/nrnrk/psql-splitter/usecase/ordering"
+	"github.com/nrnrk/psql-splitter/domain/split"
+	"github.com/nrnrk/psql-splitter/domain/split/order"
 )
 
 func Split(fileName string, splitBy int) error {
@@ -16,7 +17,7 @@ func Split(fileName string, splitBy int) error {
 		panic(err)
 	}
 
-	contC := make(chan writeContent)
+	contC := make(chan split.SplittedStatements)
 	terminateC := make(chan bool, 1)
 	errC := make(chan error)
 	var wg sync.WaitGroup
@@ -26,10 +27,10 @@ func Split(fileName string, splitBy int) error {
 		writer(defaultPrefix(fileName), contC, terminateC, errC)
 	}()
 
-	splitter := newSplitter(splitBy)
+	splitter := split.NewSplitter(splitBy)
 
 	for {
-		err := splitter.readFrom(r)
+		err := splitter.ReadFrom(r)
 		if err == io.EOF {
 			break
 		}
@@ -38,20 +39,20 @@ func Split(fileName string, splitBy int) error {
 			panic(err)
 		}
 
-		if splitter.isEndStmt() {
-			splitter.appendSql()
-			if splitter.canSplit() {
-				contC <- *splitter.cont
-				splitter.flushStmts()
+		if splitter.IsEndStmt() {
+			splitter.AppendSql()
+			if splitter.CanSplit() {
+				contC <- *splitter.Cont
+				splitter.FlushStmts()
 			}
-			splitter.flushSql()
+			splitter.FlushSql()
 		}
 	}
 
-	if !splitter.isContentEmpty() {
-		splitter.cont.statements += "\n"
-		contC <- *splitter.cont
-		splitter.flushStmts()
+	if !splitter.IsContentEmpty() {
+		splitter.Cont.AddNewLine()
+		contC <- *splitter.Cont
+		splitter.FlushStmts()
 	}
 
 	terminateC <- true
@@ -60,21 +61,16 @@ func Split(fileName string, splitBy int) error {
 	return nil
 }
 
-type writeContent struct {
-	statements string
-	order      int
-}
-
 func writer(
 	prefix string,
-	contC <-chan writeContent,
+	contC <-chan split.SplittedStatements,
 	terminateC <-chan bool,
 	errC <-chan error,
 ) {
 	for {
 		select {
 		case c := <-contC:
-			write(prefix, c.statements, c.order)
+			write(prefix, c.Statements, c.Order)
 		case t := <-terminateC:
 			if t {
 				return
@@ -86,9 +82,9 @@ func writer(
 	}
 }
 
-func write(prefix string, statements string, order int) {
+func write(prefix string, statements string, index int) {
 	// TODO: should be set by option
-	output := fmt.Sprintf("%s-%s.sql", prefix, ordering.ByAlphabet(order))
+	output := fmt.Sprintf("%s-%s.sql", prefix, order.ByAlphabet(index))
 	fmt.Printf("Writing %s\n", output)
 	f, err := os.Create(output)
 	if err != nil {

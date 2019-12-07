@@ -6,7 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/nrnrk/psql-splitter/usecase"
+	"github.com/nrnrk/psql-splitter/adapter/gateway"
 )
 
 var splitBy int
@@ -33,7 +33,7 @@ and then you can get broken down files which include 1000 statements.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		for _, arg := range args {
 			fmt.Printf("Splitting %s\n", arg)
-			if err := usecase.Split(arg, splitBy); err != nil {
+			if err := gateway.Split(arg, splitBy); err != nil {
 				panic(err)
 			}
 		}
