@@ -2,8 +2,8 @@ package cmd
 
 import (
 	"errors"
-	"fmt"
 
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
 	"github.com/nrnrk/psql-splitter/adapter/gateway"
@@ -34,7 +34,9 @@ and then you can get broken down files which include 1000 statements.`,
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		for _, arg := range args {
-			fmt.Printf("Splitting %s\n", arg)
+			log.WithFields(log.Fields{
+				"file": arg,
+			}).Info("Splitting sqls")
 			config.OutputDir = outputDir
 			if err := gateway.Split(arg, splitBy); err != nil {
 				panic(err)

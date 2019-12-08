@@ -6,8 +6,9 @@ import (
 	"path"
 	"strings"
 
-	"github.com/nrnrk/psql-splitter/config"
+	log "github.com/sirupsen/logrus"
 
+	"github.com/nrnrk/psql-splitter/config"
 	"github.com/nrnrk/psql-splitter/domain/split"
 	"github.com/nrnrk/psql-splitter/domain/split/order"
 )
@@ -27,7 +28,9 @@ func Write(
 				return
 			}
 		case err := <-errC:
-			fmt.Printf("err: %v", err)
+			log.WithFields(log.Fields{
+				"error": err,
+			}).Error("Error catched when writing")
 			return
 		}
 	}
@@ -37,7 +40,9 @@ func write(prefix string, statements string, index int) {
 	// TODO: should be set by option
 	output := fmt.Sprintf("%s-%s.sql", prefix, order.ByAlphabet(index))
 	file := path.Join(config.OutputDir, output)
-	fmt.Printf("Writing %s\n", file)
+	log.WithFields(log.Fields{
+		"file": file,
+	}).Debug("Writing file")
 	f, err := os.Create(file)
 	if err != nil {
 		panic(err)

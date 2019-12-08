@@ -1,10 +1,10 @@
 package split
 
 import (
-	"fmt"
 	"io"
 
 	pg_query "github.com/lfittl/pg_query_go"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/nrnrk/psql-splitter/domain/split/head"
 )
@@ -65,7 +65,9 @@ func (s *splitter) CanSplit() bool {
 	}
 
 	if err := s.parseCheck(); err != nil {
-		fmt.Printf("err: %v", err)
+		log.WithFields(log.Fields{
+			"error": err,
+		}).Error("Parse failed (Please check all SQLs are valid)")
 		panic(err)
 	}
 
