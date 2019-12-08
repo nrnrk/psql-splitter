@@ -21,7 +21,7 @@ INSERT INTO users
 
 by 2 statements, execute the following command.
 
-`psql-splitter sample.sql -n 2`
+`psql-splitter split sample.sql -n 2`
 
 The 2 following files are generated.
 
