@@ -51,7 +51,7 @@ func write(prefix string, statements string, index int) {
 }
 
 func defaultPrefix(fileName string) string {
-	fn := strings.Split(fileName, `.`)
+	fn := strings.Split(path.Base(fileName), `.`)
 	if len(fn) == 0 {
 		panic(`this cannot happen`)
 	}
