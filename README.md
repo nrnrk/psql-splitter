@@ -8,7 +8,7 @@ Split a (postgres) sql file into multiple files by a chunk of statements.
 
 ## Usage
 
-`psql-splitter {sql file to split} [-n {#statement in each splitted file}]`
+`psql-splitter split {sql file} [-n {split by}]`
 
 For example, if you split `sample.sql` like
 
