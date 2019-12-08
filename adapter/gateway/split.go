@@ -48,7 +48,6 @@ func Split(fileName string, splitBy int) error {
 	}
 
 	if !splitter.IsContentEmpty() {
-		splitter.Cont.AddNewLine()
 		contC <- *splitter.Cont
 		splitter.FlushStmts()
 	}
