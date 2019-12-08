@@ -1,5 +1,5 @@
 #!/bin/bash
-
+declare -r bulk_ignored=${1:-0}
 set -eu
 cd $(dirname $0)
 go build -i ../..
@@ -44,4 +44,4 @@ function execute_tests() {
     exit 0
 }
 
-execute_tests $1
+execute_tests ${bulk_ignored}
