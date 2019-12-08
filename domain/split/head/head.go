@@ -1,7 +1,7 @@
 package head
 
 import (
-	"fmt"
+	log "github.com/sirupsen/logrus"
 )
 
 // These 3 characters are all you need to take care of when splitting sqls not parsing them.
@@ -41,7 +41,9 @@ func NewHead() Head {
 func (h *head) Continue(b byte) {
 	tMap, ok := h.stateTransMap[*h.state]
 	if !ok {
-		fmt.Printf("%v", *h.state)
+		log.WithFields(log.Fields{
+			"state": h.state,
+		}).Error("Unsupported state")
 		panic(`unsupported state`)
 	}
 

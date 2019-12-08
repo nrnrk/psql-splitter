@@ -1,10 +1,11 @@
 package gateway
 
 import (
-	"fmt"
 	"io"
 	"os"
 	"sync"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/nrnrk/psql-splitter/domain/split"
 )
@@ -54,6 +55,6 @@ func Split(fileName string, splitBy int) error {
 
 	terminateC <- true
 	wg.Wait()
-	fmt.Println("\nread done")
+	log.Debug("Read done")
 	return nil
 }
