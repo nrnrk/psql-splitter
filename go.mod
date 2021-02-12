@@ -1,6 +1,6 @@
 module github.com/nrnrk/psql-splitter
 
-go 1.12
+go 1.15
 
 require (
 	github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect

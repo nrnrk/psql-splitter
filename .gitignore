@@ -3,3 +3,4 @@ test/**/result
 test/**/psql-splitter
 
 psql-splitter
+*.code-workspace
