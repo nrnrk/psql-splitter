@@ -1,4 +1,4 @@
-package gateway
+package split
 
 import (
 	"fmt"
@@ -9,13 +9,12 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/nrnrk/psql-splitter/config"
-	"github.com/nrnrk/psql-splitter/domain/split"
 	"github.com/nrnrk/psql-splitter/domain/split/order"
 )
 
 func Write(
 	prefix string,
-	contC <-chan split.SplittedStatements,
+	contC <-chan SplittedStatements,
 	terminateC <-chan bool,
 	errC <-chan error,
 ) {

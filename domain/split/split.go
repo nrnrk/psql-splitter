@@ -1,4 +1,4 @@
-package gateway
+package split
 
 import (
 	"io"
@@ -6,8 +6,6 @@ import (
 	"sync"
 
 	log "github.com/sirupsen/logrus"
-
-	"github.com/nrnrk/psql-splitter/domain/split"
 )
 
 func Split(fileName string, splitBy int) error {
@@ -16,7 +14,7 @@ func Split(fileName string, splitBy int) error {
 		panic(err)
 	}
 
-	contC := make(chan split.SplittedStatements)
+	contC := make(chan SplittedStatements)
 	terminateC := make(chan bool, 1)
 	errC := make(chan error)
 	var wg sync.WaitGroup
@@ -26,7 +24,7 @@ func Split(fileName string, splitBy int) error {
 		Write(defaultPrefix(fileName), contC, terminateC, errC)
 	}()
 
-	splitter := split.NewSplitter(splitBy)
+	splitter := NewSplitter(splitBy)
 
 	for {
 		err := splitter.ReadFrom(r)
