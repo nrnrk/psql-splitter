@@ -1,7 +1,6 @@
 package split
 
 import (
-	"io"
 	"os"
 	"sync"
 
@@ -24,32 +23,9 @@ func Split(fileName string, splitBy int) error {
 		Write(defaultPrefix(fileName), contC, terminateC, errC)
 	}()
 
-	splitter := NewSplitter(splitBy)
+	splitter := NewSplitter(r, splitBy)
 
-	for {
-		err := splitter.ReadFrom(r)
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			errC <- err
-			panic(err)
-		}
-
-		if splitter.IsEndStmt() {
-			splitter.AppendSql()
-			if splitter.CanSplit() {
-				contC <- *splitter.Cont
-				splitter.FlushStmts()
-			}
-			splitter.FlushSql()
-		}
-	}
-
-	if !splitter.IsContentEmpty() {
-		contC <- *splitter.Cont
-		splitter.FlushStmts()
-	}
+	splitter.Split(contC, errC)
 
 	terminateC <- true
 	wg.Wait()

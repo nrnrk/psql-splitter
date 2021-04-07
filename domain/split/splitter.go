@@ -10,7 +10,8 @@ import (
 )
 
 type Splitter interface {
-	ReadFrom(r io.Reader) error
+	Split(contC chan<- SplittedStatements, errC chan<- error)
+	Read() error
 	AppendSql()
 	CanSplit() bool
 	FlushSql()
@@ -20,6 +21,7 @@ type Splitter interface {
 }
 
 type splitter struct {
+	r        io.Reader
 	splitNum int
 	splitCnt int
 	Cont     *SplittedStatements
@@ -28,8 +30,9 @@ type splitter struct {
 	head     head.Head
 }
 
-func NewSplitter(splitNum int) *splitter {
+func NewSplitter(r io.Reader, splitNum int) *splitter {
 	return &splitter{
+		r:        r,
 		splitNum: splitNum,
 		splitCnt: 0,
 		Cont: &SplittedStatements{
@@ -42,8 +45,35 @@ func NewSplitter(splitNum int) *splitter {
 	}
 }
 
-func (s *splitter) ReadFrom(r io.Reader) error {
-	_, err := r.Read(s.buf)
+func (s *splitter) Split(contC chan<- SplittedStatements, errC chan<- error) {
+	for {
+		err := s.Read()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			errC <- err
+			panic(err)
+		}
+
+		if s.IsEndStmt() {
+			s.AppendSql()
+			if s.CanSplit() {
+				contC <- *s.Cont
+				s.FlushStmts()
+			}
+			s.FlushSql()
+		}
+	}
+
+	if !s.IsContentEmpty() {
+		contC <- *s.Cont
+		s.FlushStmts()
+	}
+}
+
+func (s *splitter) Read() error {
+	_, err := s.r.Read(s.buf)
 	if err != nil {
 		return err
 	}
