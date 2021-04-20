@@ -1,6 +1,7 @@
 package split
 
 import (
+	"bufio"
 	"io"
 
 	pg_query "github.com/lfittl/pg_query_go"
@@ -11,7 +12,6 @@ import (
 
 type Splitter interface {
 	Split(contC chan<- SplittedStatements, errC chan<- error)
-	Read() error
 	AppendSql()
 	CanSplit() bool
 	FlushSql()
@@ -32,37 +32,42 @@ type splitter struct {
 
 func NewSplitter(r io.Reader, splitNum int) *splitter {
 	return &splitter{
-		r:        r,
+		r:        bufio.NewReader(r),
 		splitNum: splitNum,
 		splitCnt: 0,
 		Cont: &SplittedStatements{
 			Statements: ``,
 			Order:      0,
 		},
-		sql:  make([]byte, 0, 50),
-		buf:  make([]byte, 1),
+		sql:  make([]byte, 0, 500*1024),
+		buf:  make([]byte, 100*1024),
 		head: head.NewHead(),
 	}
 }
 
 func (s *splitter) Split(contC chan<- SplittedStatements, errC chan<- error) {
 	for {
-		err := s.Read()
-		if err == io.EOF {
+		n, err := s.r.Read(s.buf)
+		if n == 0 {
+			if err != nil && err != io.EOF {
+				errC <- err
+				panic(err)
+			}
 			break
 		}
-		if err != nil {
-			errC <- err
-			panic(err)
-		}
 
-		if s.IsEndStmt() {
-			s.AppendSql()
-			if s.CanSplit() {
-				contC <- *s.Cont
-				s.FlushStmts()
+		for i := 0; i < n; i++ {
+			s.sql = append(s.sql, s.buf[i])
+			s.head.Continue(s.buf[i])
+
+			if s.IsEndStmt() {
+				s.AppendSql()
+				if s.CanSplit() {
+					contC <- *s.Cont
+					s.FlushStmts()
+				}
+				s.FlushSql()
 			}
-			s.FlushSql()
 		}
 	}
 
@@ -70,18 +75,7 @@ func (s *splitter) Split(contC chan<- SplittedStatements, errC chan<- error) {
 		contC <- *s.Cont
 		s.FlushStmts()
 	}
-}
-
-func (s *splitter) Read() error {
-	_, err := s.r.Read(s.buf)
-	if err != nil {
-		return err
-	}
-
-	s.sql = append(s.sql, s.buf[0])
-	s.head.Continue(s.buf[0])
-
-	return nil
+	close(contC)
 }
 
 func (s *splitter) AppendSql() {

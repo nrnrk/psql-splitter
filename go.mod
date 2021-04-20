@@ -7,6 +7,8 @@ require (
 	github.com/coreos/go-etcd v2.0.0+incompatible // indirect
 	github.com/cpuguy83/go-md2man v1.0.10 // indirect
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
+	github.com/google/pprof v0.0.0-20210406223550-17a10ee72223 // indirect
+	github.com/ianlancetaylor/demangle v0.0.0-20210406231658-61c622dd7d50 // indirect
 	github.com/konsorten/go-windows-terminal-sequences v1.0.3 // indirect
 	github.com/lfittl/pg_query_go v1.0.2
 	github.com/magiconair/properties v1.8.5 // indirect

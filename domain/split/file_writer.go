@@ -12,24 +12,26 @@ import (
 	"github.com/nrnrk/psql-splitter/domain/split/order"
 )
 
-func Write(
+func StartWriting(
 	prefix string,
 	contC <-chan SplittedStatements,
-	terminateC <-chan bool,
 	errC <-chan error,
 ) {
+	log.Info("Start writing...")
 	for {
 		select {
-		case c := <-contC:
-			write(prefix, c.Statements, c.Order)
-		case t := <-terminateC:
-			if t {
+		case c, ok := <-contC:
+			if !ok {
+				log.Info("Finished writing")
+				fmt.Println("Finished writing")
 				return
 			}
+			fmt.Println("Writing...")
+			write(prefix, c.Statements, c.Order)
 		case err := <-errC:
 			log.WithFields(log.Fields{
 				"error": err,
-			}).Error("Error catched when writing")
+			}).Error("Error caught and stop writing")
 			return
 		}
 	}
