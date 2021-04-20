@@ -46,5 +46,8 @@ jobs:
               dep ensure
           fi
 
+      - name: Unit Test
+        run: go test ./...
+
       - name: Test
         run: ./test/split/split_test.sh
