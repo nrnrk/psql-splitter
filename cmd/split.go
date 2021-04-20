@@ -6,8 +6,8 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
-	"github.com/nrnrk/psql-splitter/adapter/gateway"
 	"github.com/nrnrk/psql-splitter/config"
+	"github.com/nrnrk/psql-splitter/domain/split"
 )
 
 var splitBy int
@@ -38,7 +38,7 @@ and then you can get broken down files which include 1000 statements.`,
 				"file": arg,
 			}).Info("Splitting sqls")
 			config.OutputDir = outputDir
-			if err := gateway.Split(arg, splitBy); err != nil {
+			if err := split.Split(arg, splitBy); err != nil {
 				panic(err)
 			}
 		}
